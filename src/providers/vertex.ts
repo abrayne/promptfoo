@@ -1,6 +1,6 @@
 import type { GaxiosError } from 'gaxios';
 import Clone from 'rfdc';
-import { getCache, isCacheEnabled } from '../cache';
+import { getCache, isCacheEnabled, fetchWithCache } from '../cache';
 import cliState from '../cliState';
 import { getEnvString } from '../envars';
 import logger from '../logger';
@@ -481,19 +481,56 @@ export class VertexChatProvider extends VertexGenericProvider {
       }
     }
 
+    let data;
     if (response === undefined) {
-      let data;
+      // let data, status, statusText;
+      // let cached = false;
+      // try {
+      //   const url = `https://${this.getApiHost()}/${this.getApiVersion()}/projects/${projectId}/locations/${this.getRegion()}/publishers/${this.getPublisher()}/models/${
+      //     this.modelName
+      //   }:streamGenerateContent`;
+      //   ({ data, cached, status, statusText } = await fetchWithCache(
+      //     url,
+      //     {
+      //       method: 'POST',
+      //       body: JSON.stringify(body),
+      //     },
+      //     REQUEST_TIMEOUT_MS,
+      //   ));
+
+      //   if (status < 200 || status >= 300) {
+      //     return {
+      //       error: `API error: ${status} ${statusText}\n${typeof data === 'string' ? data : JSON.stringify(data)}`,
+      //     };
+      //   }
+      // } catch (err) {
+      //   logger.error(`API call error: ${String(err)}`);
+      //   await data?.deleteFromCache?.();
+      //   return {
+      //     error: `API call error: ${String(err)}`,
+      //   };
+      // }
+
       try {
         const { client, projectId } = await getGoogleClient();
         const url = `https://${this.getApiHost()}/${this.getApiVersion()}/projects/${projectId}/locations/${this.getRegion()}/publishers/${this.getPublisher()}/models/${
           this.modelName
         }:streamGenerateContent`;
-        const res = await client.request({
+        // const res = await client.request({
+        //   url,
+        //   method: 'POST',
+        //   data: body,
+        //   timeout: REQUEST_TIMEOUT_MS,
+        // });
+        let res, status, statusText, cached;
+        ({ res, cached, status, statusText } = await fetchWithCache(
           url,
-          method: 'POST',
-          data: body,
-          timeout: REQUEST_TIMEOUT_MS,
-        });
+          {
+            method: 'POST',
+            body: JSON.stringify(body),
+          },
+          REQUEST_TIMEOUT_MS,
+        ));
         data = res.data as GeminiApiResponse;
         logger.debug(`Gemini API response: ${JSON.stringify(data)}`);
       } catch (err) {

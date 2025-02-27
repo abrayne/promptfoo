@@ -1,5 +1,5 @@
 import type { JSONClient } from 'google-auth-library/build/src/auth/googleauth';
-import { getCache, isCacheEnabled } from '../../src/cache';
+import { getCache, isCacheEnabled, fetchWithCache } from '../../src/cache';
 import logger from '../../src/logger';
 import { VertexChatProvider } from '../../src/providers/vertex';
 import * as vertexUtil from '../../src/providers/vertexUtil';
@@ -16,6 +16,8 @@ jest.mock('../../src/providers/vertexUtil', () => ({
   ...jest.requireActual('../../src/providers/vertexUtil'),
   getGoogleClient: jest.fn(),
 }));
+
+const mockFetchWithCache = jest.mocked(fetchWithCache);
 
 describe('VertexChatProvider.callGeminiApi', () => {
   let provider: VertexChatProvider;
@@ -60,16 +62,29 @@ describe('VertexChatProvider.callGeminiApi', () => {
           },
         },
       ],
+      cached: false,
+      status: 200,
+      statusText: 'OK',
     };
-
+    // const mockResponse = {
+    //   data: {
+    //     choices: [{ message: { content: 'Test output' } }],
+    //     usage: { total_tokens: 10, prompt_tokens: 5, completion_tokens: 5 },
+    //   },
+    //   cached: false,
+    //   status: 200,
+    //   statusText: 'OK',
+    // };
     const mockRequest = jest.fn().mockResolvedValue(mockResponse);
 
-    jest.spyOn(vertexUtil, 'getGoogleClient').mockResolvedValue({
-      client: {
-        request: mockRequest,
-      } as unknown as JSONClient,
-      projectId: 'test-project-id',
-    });
+    // jest.spyOn(vertexUtil, 'getGoogleClient').mockResolvedValue({
+    //   client: {
+    //     request: mockRequest,
+    //   } as unknown as JSONClient,
+    //   projectId: 'test-project-id',
+    // });
+
+    mockFetchWithCache.mockResolvedValue(mockResponse);
 
     const response = await provider.callGeminiApi('test prompt');
 
