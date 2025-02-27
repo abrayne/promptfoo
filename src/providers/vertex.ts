@@ -82,12 +82,6 @@ interface FunctionDeclaration {
 
 export type FunctionParameters = Record<string, unknown>;
 
-interface FunctionDefinition {
-  name: string;
-  description: string;
-  parameters?: FunctionParameters;
-}
-
 interface GoogleSearchRetrieval {
   dynamicRetrievalConfig: {
     mode?: 'MODE_UNSPECIFIED' | 'MODE_DYNAMIC';
@@ -144,7 +138,7 @@ interface VertexCompletionOptions {
    * If set, automatically call these functions when the assistant activates
    * these function tools.
    */
-  functionToolCallbacks?: Record<FunctionDefinition['name'], (arg: string) => Promise<string>>;
+  functionToolCallbacks?: Record<string, (arg: string) => Promise<string>>;
 
   systemInstruction?: Content;
 }
